@@ -13,7 +13,7 @@ class G1RoughCfg( LeggedRobotCfg ):
             'right_hip_yaw_joint' : -0.2,    # 右侧对称
             'right_hip_roll_joint' : -0.15, 
             'right_hip_pitch_joint' : -0.4,                                     
-            'right_knee_joint' : 0.8,                                           
+            'right_knee_joint' : 0.65,                                           
             'right_ankle_pitch_joint': -0.4,                            
             'right_ankle_roll_joint' : -0.05,       
             'torso_joint' : 0.

@@ -201,7 +201,7 @@ class G1Robot(LeggedRobot):
         knee_angles = self.dof_pos[:, knee_joints]
         
         # 拳击手姿态的理想膝关节角度
-        target_knee_angles = torch.tensor([0.7, 0.7], device=self.device)
+        target_knee_angles = torch.tensor([0.65, 0.65], device=self.device)
         
         knee_errors = torch.abs(knee_angles - target_knee_angles)
         knee_rewards = torch.exp(-knee_errors * 3.0)
