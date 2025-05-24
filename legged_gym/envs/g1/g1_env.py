@@ -55,8 +55,10 @@ class G1Robot(LeggedRobot):
     def _post_physics_step_callback(self):
         self.update_feet_state()
 
-        period = 1.2  # 增加步态周期，从0.8增加到1.2，让步态更稳
-        offset = 0.5
+        # 拳击手步态：更慢、更稳定的步频
+        period = 1.5  # 增加步态周期，从0.8增加到1.2，让步态更稳；进一步增加步态周期到1.5
+        offset = 0.6  # 调整相位偏移，让步态更不对称
+        
         self.phase = (self.episode_length_buf * self.dt) % period / period
         self.phase_left = self.phase
         self.phase_right = (self.phase + offset) % 1
@@ -96,9 +98,11 @@ class G1Robot(LeggedRobot):
 
         
     def _reward_contact(self):
+        """改进的接触奖励 - 适应拳击手步态"""
         res = torch.zeros(self.num_envs, dtype=torch.float, device=self.device)
         for i in range(self.feet_num):
-            is_stance = self.leg_phase[:, i] < 0.55
+            # 拳击手步态的接触相位更长
+            is_stance = self.leg_phase[:, i] < 0.7  # 增加站立相比例
             contact = self.contact_forces[:, self.feet_indices[i], 2] > 1
             res += ~(contact ^ is_stance)
         return res
@@ -159,3 +163,65 @@ class G1Robot(LeggedRobot):
         roll_pitch = self.base_euler[:, :2]  # roll和pitch角
         stability_penalty = torch.sum(torch.square(roll_pitch), dim=1)
         return torch.exp(-stability_penalty * 10)
+    
+    def _reward_boxer_stability(self):
+        """奖励拳击手式的稳定性 - 低重心+宽站姿组合"""
+        # 重心高度因子
+        current_height = self.root_states[:, 2]
+        height_factor = torch.exp(-(current_height - 0.5)**2 / 0.02)
+        
+        # 步宽因子
+        left_foot_pos = self.feet_pos[:, 0, :2]
+        right_foot_pos = self.feet_pos[:, 1, :2]
+        foot_distance = torch.norm(left_foot_pos - right_foot_pos, dim=1)
+        width_factor = torch.exp(-(foot_distance - 0.35)**2 / 0.01)
+        
+        # 组合奖励
+        return height_factor * width_factor
+
+    def _reward_forward_lean(self):
+        """奖励轻微前倾姿态（拳击手特征）"""
+        # 获取躯干的pitch角度（前倾角）
+        pitch_angle = self.base_euler[:, 1]  # pitch角
+        target_lean = 0.1  # 轻微前倾约5.7度
+        
+        lean_reward = torch.exp(-(pitch_angle - target_lean)**2 / 0.05)
+        return lean_reward
+
+    def _reward_foot_placement(self):
+        """奖励合理的脚步位置（拳击手步态）"""
+        # 左右脚的前后位置差异（拳击手通常一脚略微在前）
+        left_foot_x = self.feet_pos[:, 0, 0]
+        right_foot_x = self.feet_pos[:, 1, 0]
+        
+        # 期望左脚稍微在前（或根据需要调整）
+        x_diff = left_foot_x - right_foot_x
+        target_x_diff = 0.1  # 左脚在前10cm
+        
+        placement_reward = torch.exp(-(x_diff - target_x_diff)**2 / 0.02)
+        return placement_reward
+
+    def _reward_knee_bend(self):
+        """改进的膝关节弯曲奖励"""
+        # 确保膝关节索引正确
+        knee_joints = [3, 9]  # 根据URDF调整
+        knee_angles = self.dof_pos[:, knee_joints]
+        
+        # 拳击手姿态的理想膝关节角度
+        target_knee_angles = torch.tensor([0.7, 0.7], device=self.device)
+        
+        knee_errors = torch.abs(knee_angles - target_knee_angles)
+        knee_rewards = torch.exp(-knee_errors * 3.0)
+        
+        return torch.mean(knee_rewards, dim=1)
+
+    def _reward_hip_stability(self):
+        """髋关节稳定性 - 保持拳击手宽髋姿态"""
+        hip_roll_joints = [1, 7]  # 髋关节roll索引
+        hip_rolls = self.dof_pos[:, hip_roll_joints]
+        
+        # 期望的髋关节外展角度
+        target_rolls = torch.tensor([0.15, -0.15], device=self.device)
+        
+        roll_errors = torch.abs(hip_rolls - target_rolls)
+        return torch.sum(torch.exp(-roll_errors * 5.0), dim=1)

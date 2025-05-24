@@ -2,20 +2,20 @@ from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobot
 
 class G1RoughCfg( LeggedRobotCfg ):
     class init_state( LeggedRobotCfg.init_state ):
-        pos = [0.0, 0.0, 0.65] # x,y,z [m] # 降低初始高度，从0.8降到0.65
-        default_joint_angles = { # = target angles [rad] when action = 0.0
-            'left_hip_yaw_joint' : 0.15,    # 增加髋关节外展，加宽站姿
-            'left_hip_roll_joint' : 0.1,             
-            'left_hip_pitch_joint' : -0.3,   # 增加髋关节弯曲，降低重心      
-            'left_knee_joint' : 0.6,         # 增加膝关节弯曲
-            'left_ankle_pitch_joint' : -0.3, # 调整踝关节保持平衡
-            'left_ankle_roll_joint' : 0,     
-            'right_hip_yaw_joint' : -0.15,   # 右侧对称
-            'right_hip_roll_joint' : -0.1, 
-            'right_hip_pitch_joint' : -0.3,                                     
-            'right_knee_joint' : 0.6,                                           
-            'right_ankle_pitch_joint': -0.3,                            
-            'right_ankle_roll_joint' : 0,       
+        pos = [0.0, 0.0, 0.55] # x,y,z [m] # 降低初始高度，从0.8降到0.65；再改到0.55
+        default_joint_angles = {
+            'left_hip_yaw_joint' : 0.2,      # 增加外展角度
+            'left_hip_roll_joint' : 0.15,    # 增加髋关节外展           
+            'left_hip_pitch_joint' : -0.4,   # 更大的髋关节弯曲      
+            'left_knee_joint' : 0.8,         # 更大的膝关节弯曲
+            'left_ankle_pitch_joint' : -0.4, # 调整踝关节
+            'left_ankle_roll_joint' : 0.05,     
+            'right_hip_yaw_joint' : -0.2,    # 右侧对称
+            'right_hip_roll_joint' : -0.15, 
+            'right_hip_pitch_joint' : -0.4,                                     
+            'right_knee_joint' : 0.8,                                           
+            'right_ankle_pitch_joint': -0.4,                            
+            'right_ankle_roll_joint' : -0.05,       
             'torso_joint' : 0.
         }
     
@@ -79,31 +79,34 @@ class G1RoughCfg( LeggedRobotCfg ):
   
     class rewards( LeggedRobotCfg.rewards ):
         soft_dof_pos_limit = 0.9
-        base_height_target = 0.6  # 降低目标高度，从0.78降到0.6
+        base_height_target = 0.5  # 降低目标高度，从0.78降到0.6；再降低到0.5
         
         class scales( LeggedRobotCfg.rewards.scales ):
-            tracking_lin_vel = 1.0
-            tracking_ang_vel = 0.5
-            lin_vel_z = -2.0
-            ang_vel_xy = -0.05
-            orientation = -1.0
-            base_height = -10.0
+            tracking_lin_vel = 0.8     # 降低速度跟踪权重
+            tracking_ang_vel = 0.3
+            lin_vel_z = -3.0
+            ang_vel_xy = -0.1
+            orientation = -2.0         # 增加姿态稳定性权重
+            base_height = -15.0        # 增加高度控制权重
             dof_acc = -2.5e-7
-            dof_vel = -1e-3
+            dof_vel = -2e-3
             feet_air_time = 0.0
             collision = 0.0
-            action_rate = -0.01
+            action_rate = -0.005       # 减少动作变化惩罚
             dof_pos_limits = -5.0
-            alive = 0.15
-            hip_pos = -1.0
-            contact_no_vel = -0.2
-            feet_swing_height = -20.0
-            contact = 0.18
-
-            # 添加新的奖励项
-            stance_width = 2.0      # 奖励保持宽步态
-            low_posture = 1.0       # 奖励低重心姿态
-            knee_bend = 0.5         # 奖励膝关节弯曲
+            alive = 0.2
+            hip_pos = -2.0             # 增加髋关节位置控制
+            contact_no_vel = -0.1
+            feet_swing_height = -10.0
+            contact = 0.25
+            
+            # 拳击手步态特征
+            stance_width = 3.0         # 增加步宽奖励权重
+            low_posture = 2.0          # 增加低姿态奖励权重
+            knee_bend = 1.5            # 增加膝关节弯曲奖励
+            boxer_stability = 2.0      # 新增：拳击手稳定性
+            forward_lean = 1.0         # 新增：前倾姿态
+            foot_placement = 1.5       # 新增：脚步位置控制
 
 class G1RoughCfgPPO( LeggedRobotCfgPPO ):
     class policy:
