@@ -39,18 +39,20 @@ class G1RoughCfg( LeggedRobotCfg ):
         # PD Drive parameters:
         control_type = 'P'
           # PD Drive parameters:
-        stiffness = {'hip_yaw': 100,
-                     'hip_roll': 100,
-                     'hip_pitch': 100,
-                     'knee': 150,
-                     'ankle': 40,
-                     }  # [N*m/rad]
-        damping = {  'hip_yaw': 2,
-                     'hip_roll': 2,
-                     'hip_pitch': 2,
-                     'knee': 4,
-                     'ankle': 2,
-                     }  # [N*m/rad]  # [N*m*s/rad]
+        stiffness = {
+            'hip_yaw': 150,    # 增加髋关节刚度
+            'hip_roll': 150,
+            'hip_pitch': 150,
+            'knee': 200,       # 增加膝关节刚度
+            'ankle': 60,
+        } # [N*m/rad]
+        damping = {
+            'hip_yaw': 3,      # 增加阻尼
+            'hip_roll': 3,
+            'hip_pitch': 3,
+            'knee': 6,
+            'ankle': 3,
+        } # [N*m*s/rad]
         # action scale: target angle = actionScale * action + defaultAngle
         action_scale = 0.25
         # decimation: Number of control action updates @ sim DT per policy DT
