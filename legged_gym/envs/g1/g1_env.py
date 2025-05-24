@@ -55,7 +55,7 @@ class G1Robot(LeggedRobot):
     def _post_physics_step_callback(self):
         self.update_feet_state()
 
-        period = 0.8
+        period = 1.2  # 增加步态周期，从0.8增加到1.2，让步态更稳
         offset = 0.5
         self.phase = (self.episode_length_buf * self.dt) % period / period
         self.phase_left = self.phase
