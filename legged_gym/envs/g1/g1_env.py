@@ -145,18 +145,6 @@ class G1Robot(LeggedRobot):
         height_reward = torch.exp(-(current_height - target_low_height)**2 / 0.01)
         return height_reward
 
-    def _reward_knee_bend(self):
-        """奖励膝关节保持弯曲"""
-        # 膝关节索引（需要根据具体URDF确认）
-        left_knee_idx = 3   # 根据实际情况调整
-        right_knee_idx = 9  # 根据实际情况调整
-        
-        knee_angles = self.dof_pos[:, [left_knee_idx, right_knee_idx]]
-        target_knee_angle = 0.6  # 理想弯曲角度
-        
-        knee_error = torch.abs(knee_angles - target_knee_angle)
-        return torch.sum(torch.exp(-knee_error * 5), dim=1)
-
     def _reward_stable_base(self):
         """奖励躯干稳定性"""
         # 限制躯干的横滚和俯仰角度
