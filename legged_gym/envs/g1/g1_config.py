@@ -34,6 +34,16 @@ class G1RoughCfg( LeggedRobotCfg ):
         push_interval_s = 5
         max_push_vel_xy = 1.5
       
+    class commands:
+        num_commands = 4
+        resampling_time = 10.0
+        heading_command = True
+        
+        class ranges:
+            lin_vel_x = [-0.8, 0.8]  # 降低最大速度
+            lin_vel_y = [-0.5, 0.5]
+            ang_vel_yaw = [-0.5, 0.5]
+            heading = [-3.14, 3.14]
 
     class control( LeggedRobotCfg.control ):
         # PD Drive parameters:
