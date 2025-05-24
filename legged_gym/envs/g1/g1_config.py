@@ -2,12 +2,12 @@ from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobot
 
 class G1RoughCfg( LeggedRobotCfg ):
     class init_state( LeggedRobotCfg.init_state ):
-        pos = [0.0, 0.0, 0.55] # x,y,z [m] # 降低初始高度，从0.8降到0.65；再改到0.55
+        pos = [0.0, 0.0, 0.6] # x,y,z [m] # 降低初始高度，从0.8降到0.65；再改到0.55
         default_joint_angles = {
             'left_hip_yaw_joint' : 0.2,      # 增加外展角度
             'left_hip_roll_joint' : 0.15,    # 增加髋关节外展           
             'left_hip_pitch_joint' : -0.4,   # 更大的髋关节弯曲      
-            'left_knee_joint' : 0.8,         # 更大的膝关节弯曲
+            'left_knee_joint' : 0.65,         # 更大的膝关节弯曲
             'left_ankle_pitch_joint' : -0.4, # 调整踝关节
             'left_ankle_roll_joint' : 0.05,     
             'right_hip_yaw_joint' : -0.2,    # 右侧对称
@@ -79,7 +79,7 @@ class G1RoughCfg( LeggedRobotCfg ):
   
     class rewards( LeggedRobotCfg.rewards ):
         soft_dof_pos_limit = 0.9
-        base_height_target = 0.5  # 降低目标高度，从0.78降到0.6；再降低到0.5
+        base_height_target = 0.55  # 降低目标高度，从0.78降到0.6；再降低到0.5
         
         class scales( LeggedRobotCfg.rewards.scales ):
             tracking_lin_vel = 0.8     # 降低速度跟踪权重
