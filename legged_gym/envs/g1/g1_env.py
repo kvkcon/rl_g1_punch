@@ -181,10 +181,15 @@ class G1Robot(LeggedRobot):
 
     def _reward_forward_lean(self):
         """奖励轻微前倾姿态（拳击手特征）"""
-        # 获取躯干的pitch角度（前倾角）
-        pitch_angle = self.base_euler[:, 1]  # pitch角
-        target_lean = 0.1  # 轻微前倾约5.7度
+        # 从四元数计算pitch角
+        quat = self.root_states[:, 3:7]  # 四元数 [x, y, z, w]
         
+        # 计算pitch角（绕y轴旋转）
+        # pitch = arcsin(2 * (w*y - z*x))
+        w, x, y, z = quat[:, 3], quat[:, 0], quat[:, 1], quat[:, 2]
+        pitch_angle = torch.asin(2 * (w*y - z*x))
+        
+        target_lean = 0.1  # 轻微前倾约5.7度
         lean_reward = torch.exp(-(pitch_angle - target_lean)**2 / 0.05)
         return lean_reward
 
