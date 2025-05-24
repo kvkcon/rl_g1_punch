@@ -122,3 +122,40 @@ class G1Robot(LeggedRobot):
     def _reward_hip_pos(self):
         return torch.sum(torch.square(self.dof_pos[:,[1,2,7,8]]), dim=1)
     
+    def _reward_stance_width(self):
+        """奖励保持拳击手宽站姿"""
+        # 计算左右脚之间的距离
+        left_foot_pos = self.feet_pos[:, 0, :2]   # 左脚XY位置
+        right_foot_pos = self.feet_pos[:, 1, :2]  # 右脚XY位置
+        foot_distance = torch.norm(left_foot_pos - right_foot_pos, dim=1)
+        
+        # 理想的步宽（根据机器人尺寸调整）
+        target_width = 0.3
+        width_error = torch.abs(foot_distance - target_width)
+        return torch.exp(-width_error * 10)
+    
+    def _reward_low_posture(self):
+        """奖励保持低重心姿态"""
+        current_height = self.root_states[:, 2]
+        target_low_height = 0.6
+        height_reward = torch.exp(-(current_height - target_low_height)**2 / 0.01)
+        return height_reward
+
+    def _reward_knee_bend(self):
+        """奖励膝关节保持弯曲"""
+        # 膝关节索引（需要根据具体URDF确认）
+        left_knee_idx = 3   # 根据实际情况调整
+        right_knee_idx = 9  # 根据实际情况调整
+        
+        knee_angles = self.dof_pos[:, [left_knee_idx, right_knee_idx]]
+        target_knee_angle = 0.6  # 理想弯曲角度
+        
+        knee_error = torch.abs(knee_angles - target_knee_angle)
+        return torch.sum(torch.exp(-knee_error * 5), dim=1)
+
+    def _reward_stable_base(self):
+        """奖励躯干稳定性"""
+        # 限制躯干的横滚和俯仰角度
+        roll_pitch = self.base_euler[:, :2]  # roll和pitch角
+        stability_penalty = torch.sum(torch.square(roll_pitch), dim=1)
+        return torch.exp(-stability_penalty * 10)
