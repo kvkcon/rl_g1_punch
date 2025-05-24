@@ -2,21 +2,21 @@ from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobot
 
 class G1RoughCfg( LeggedRobotCfg ):
     class init_state( LeggedRobotCfg.init_state ):
-        pos = [0.0, 0.0, 0.8] # x,y,z [m]
+        pos = [0.0, 0.0, 0.65] # x,y,z [m] # 降低初始高度，从0.8降到0.65
         default_joint_angles = { # = target angles [rad] when action = 0.0
-           'left_hip_yaw_joint' : 0. ,   
-           'left_hip_roll_joint' : 0,               
-           'left_hip_pitch_joint' : -0.1,         
-           'left_knee_joint' : 0.3,       
-           'left_ankle_pitch_joint' : -0.2,     
-           'left_ankle_roll_joint' : 0,     
-           'right_hip_yaw_joint' : 0., 
-           'right_hip_roll_joint' : 0, 
-           'right_hip_pitch_joint' : -0.1,                                       
-           'right_knee_joint' : 0.3,                                             
-           'right_ankle_pitch_joint': -0.2,                              
-           'right_ankle_roll_joint' : 0,       
-           'torso_joint' : 0.
+            'left_hip_yaw_joint' : 0.15,    # 增加髋关节外展，加宽站姿
+            'left_hip_roll_joint' : 0.1,             
+            'left_hip_pitch_joint' : -0.3,   # 增加髋关节弯曲，降低重心      
+            'left_knee_joint' : 0.6,         # 增加膝关节弯曲
+            'left_ankle_pitch_joint' : -0.3, # 调整踝关节保持平衡
+            'left_ankle_roll_joint' : 0,     
+            'right_hip_yaw_joint' : -0.15,   # 右侧对称
+            'right_hip_roll_joint' : -0.1, 
+            'right_hip_pitch_joint' : -0.3,                                     
+            'right_knee_joint' : 0.6,                                           
+            'right_ankle_pitch_joint': -0.3,                            
+            'right_ankle_roll_joint' : 0,       
+            'torso_joint' : 0.
         }
     
     class env(LeggedRobotCfg.env):
@@ -67,7 +67,7 @@ class G1RoughCfg( LeggedRobotCfg ):
   
     class rewards( LeggedRobotCfg.rewards ):
         soft_dof_pos_limit = 0.9
-        base_height_target = 0.78
+        base_height_target = 0.6  # 降低目标高度，从0.78降到0.6
         
         class scales( LeggedRobotCfg.rewards.scales ):
             tracking_lin_vel = 1.0
@@ -87,6 +87,11 @@ class G1RoughCfg( LeggedRobotCfg ):
             contact_no_vel = -0.2
             feet_swing_height = -20.0
             contact = 0.18
+
+            # 添加新的奖励项
+            stance_width = 2.0      # 奖励保持宽步态
+            low_posture = 1.0       # 奖励低重心姿态
+            knee_bend = 0.5         # 奖励膝关节弯曲
 
 class G1RoughCfgPPO( LeggedRobotCfgPPO ):
     class policy:
