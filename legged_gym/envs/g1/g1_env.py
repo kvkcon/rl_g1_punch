@@ -127,16 +127,24 @@ class G1Robot(LeggedRobot):
         return torch.sum(torch.square(self.dof_pos[:,[1,2,7,8]]), dim=1)
     
     def _reward_stance_width(self):
-        """奖励保持拳击手宽站姿"""
-        # 计算左右脚之间的距离
-        left_foot_pos = self.feet_pos[:, 0, :2]   # 左脚XY位置
-        right_foot_pos = self.feet_pos[:, 1, :2]  # 右脚XY位置
+        """改进的步宽奖励 - 更激进地鼓励宽站姿"""
+        left_foot_pos = self.feet_pos[:, 0, :2]
+        right_foot_pos = self.feet_pos[:, 1, :2]
         foot_distance = torch.norm(left_foot_pos - right_foot_pos, dim=1)
         
-        # 理想的步宽（根据机器人尺寸调整）
-        target_width = 0.3
+        # 增加目标宽度
+        target_width = 0.4  # 从0.3增加到0.4
         width_error = torch.abs(foot_distance - target_width)
-        return torch.exp(-width_error * 10)
+        
+        # 使用更宽松的奖励函数
+        base_reward = torch.exp(-width_error * 5.0)
+        
+        # 额外奖励超宽站姿
+        extra_wide_bonus = torch.where(foot_distance > 0.35,
+                                    (foot_distance - 0.35) * 3.0,
+                                    torch.zeros_like(foot_distance))
+        
+        return base_reward + extra_wide_bonus
     
     def _reward_low_posture(self):
         """奖励保持低重心姿态"""
@@ -154,18 +162,25 @@ class G1Robot(LeggedRobot):
     
     def _reward_boxer_stability(self):
         """奖励拳击手式的稳定性 - 低重心+宽站姿组合"""
+        """改进的拳击手稳定性 - 更强调宽站姿"""
         # 重心高度因子
         current_height = self.root_states[:, 2]
         height_factor = torch.exp(-(current_height - 0.5)**2 / 0.02)
         
-        # 步宽因子
+        # 步宽因子 - 增加目标宽度
         left_foot_pos = self.feet_pos[:, 0, :2]
         right_foot_pos = self.feet_pos[:, 1, :2]
         foot_distance = torch.norm(left_foot_pos - right_foot_pos, dim=1)
-        width_factor = torch.exp(-(foot_distance - 0.35)**2 / 0.01)
+        width_factor = torch.exp(-(foot_distance - 0.4)**2 / 0.01)  # 目标宽度增加到0.4
         
-        # 组合奖励
-        return height_factor * width_factor
+        # 髋关节外展因子
+        hip_rolls = self.dof_pos[:, [1, 7]]
+        target_rolls = torch.tensor([0.25, -0.25], device=self.device)
+        hip_errors = torch.abs(hip_rolls - target_rolls)
+        hip_factor = torch.mean(torch.exp(-hip_errors * 2.0), dim=1)
+        
+        # 三重组合奖励
+        return height_factor * width_factor * hip_factor
 
     def _reward_forward_lean(self):
         """奖励轻微前倾姿态（拳击手特征）"""
@@ -218,3 +233,46 @@ class G1Robot(LeggedRobot):
         
         roll_errors = torch.abs(hip_rolls - target_rolls)
         return torch.sum(torch.exp(-roll_errors * 5.0), dim=1)
+    
+    def _reward_hip_abduction(self):
+        """专门奖励髋关节外展（拳击手宽站姿核心）"""
+        hip_roll_left = 1   # left_hip_roll_joint
+        hip_roll_right = 7  # right_hip_roll_joint
+        
+        hip_rolls = self.dof_pos[:, [hip_roll_left, hip_roll_right]]
+        
+        # 更大的目标外展角度
+        target_rolls = torch.tensor([0.25, -0.25], device=self.device)
+        
+        # 使用更宽松的奖励函数，鼓励更大的外展
+        roll_errors = torch.abs(hip_rolls - target_rolls)
+        abduction_rewards = torch.exp(-roll_errors * 2.0)  # 降低惩罚系数
+        
+        # 额外奖励超过最小外展角度的情况
+        min_abduction = 0.15
+        bonus_left = torch.where(hip_rolls[:, 0] > min_abduction, 
+                            (hip_rolls[:, 0] - min_abduction) * 2.0, 
+                            torch.zeros_like(hip_rolls[:, 0]))
+        bonus_right = torch.where(hip_rolls[:, 1] < -min_abduction, 
+                                (-hip_rolls[:, 1] - min_abduction) * 2.0, 
+                                torch.zeros_like(hip_rolls[:, 1]))
+        
+        return torch.sum(abduction_rewards, dim=1) + bonus_left + bonus_right
+    
+    def _reward_wide_stance_bonus(self):
+        """额外的宽站姿奖励"""
+        # 计算脚间距离
+        left_foot_pos = self.feet_pos[:, 0, :2]
+        right_foot_pos = self.feet_pos[:, 1, :2]
+        foot_distance = torch.norm(left_foot_pos - right_foot_pos, dim=1)
+        
+        # 多层次奖励不同的宽度
+        width_thresholds = [0.3, 0.35, 0.4, 0.45]
+        bonus = torch.zeros_like(foot_distance)
+        
+        for i, threshold in enumerate(width_thresholds):
+            bonus += torch.where(foot_distance > threshold, 
+                            torch.ones_like(foot_distance) * (i + 1) * 0.2,
+                            torch.zeros_like(foot_distance))
+        
+        return bonus
