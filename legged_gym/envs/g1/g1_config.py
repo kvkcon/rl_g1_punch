@@ -34,7 +34,7 @@ class G1RoughCfg( LeggedRobotCfg ):
         push_interval_s = 5
         max_push_vel_xy = 1.5
       
-    class commands:
+    class commands(LeggedRobotCfg.commands):
         num_commands = 4
         resampling_time = 10.0
         heading_command = True
