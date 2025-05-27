@@ -197,18 +197,18 @@ class G1Robot(LeggedRobot):
     #     lean_reward = torch.exp(-(pitch_angle - target_lean)**2 / 0.05)
     #     return lean_reward
 
-    # def _reward_foot_placement(self):
-    #     """奖励合理的脚步位置（拳击手步态）"""
-    #     # 左右脚的前后位置差异（拳击手通常一脚略微在前）
-    #     left_foot_x = self.feet_pos[:, 0, 0]
-    #     right_foot_x = self.feet_pos[:, 1, 0]
+    def _reward_foot_placement(self):
+        """奖励合理的脚步位置（拳击手步态）"""
+        # 左右脚的前后位置差异（拳击手通常一脚略微在前）
+        left_foot_x = self.feet_pos[:, 0, 0]
+        right_foot_x = self.feet_pos[:, 1, 0]
         
-    #     # 期望左脚稍微在前（或根据需要调整）
-    #     x_diff = left_foot_x - right_foot_x
-    #     target_x_diff = 0.1  # 左脚在前10cm
+        # 期望左脚稍微在前（或根据需要调整）
+        x_diff = left_foot_x - right_foot_x
+        target_x_diff = 0.1  # 左脚在前10cm
         
-    #     placement_reward = torch.exp(-(x_diff - target_x_diff)**2 / 0.02)
-    #     return placement_reward
+        placement_reward = torch.exp(-(x_diff - target_x_diff)**2 / 0.02)
+        return placement_reward
 
     def _reward_knee_bend(self):
         """改进的膝关节弯曲奖励"""

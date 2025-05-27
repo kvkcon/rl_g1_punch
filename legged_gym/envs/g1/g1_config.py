@@ -79,7 +79,7 @@ class G1RoughCfg( LeggedRobotCfg ):
   
     class rewards( LeggedRobotCfg.rewards ):
         soft_dof_pos_limit = 0.9
-        base_height_target = 0.7  # 降低目标高度，从0.78降到0.6；再降低到0.5
+        base_height_target = 0.73  # 降低目标高度，从0.78降到0.6；再降低到0.5
         
         class scales( LeggedRobotCfg.rewards.scales ):
             tracking_lin_vel = 1.5     
@@ -106,11 +106,11 @@ class G1RoughCfg( LeggedRobotCfg ):
             movement_efficiency = 1.0   # 新增：运动效率
             
             # 暂时注释掉这些容易冲突的奖励
-            # low_posture = 0.0
-            # boxer_stability = 0.0  
-            # forward_lean = 0.0
-            # foot_placement = 0.0
-            knee_bend = 0.0
+            # low_posture = 1.5
+            # boxer_stability = 2.0  
+            # forward_lean = 0.5
+            foot_placement = 1.0
+            knee_bend = 1.0
             # hip_stability = 0.0
             # hip_pos = 0.0  # 也暂时禁用，因为它可能与hip_abduction冲突
 
