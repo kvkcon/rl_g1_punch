@@ -4,19 +4,19 @@ class G1RoughCfg( LeggedRobotCfg ):
     class init_state( LeggedRobotCfg.init_state ):
         pos = [0.0, 0.0, 0.65] # x,y,z [m] # 降低初始高度，从0.8降到0.65；再改到0.55
         default_joint_angles = {
-            'left_hip_yaw_joint' : 0.2,      # 增加外展角度；增加到0.3（约17度）
-            'left_hip_roll_joint' : 0.25,    # 增加髋关节外展；大幅增加外展到0.25（约14度）           
-            'left_hip_pitch_joint' : -0.5,   # 增加髋关节弯曲     
-            'left_knee_joint' : 0.65,         # 更大的膝关节弯曲
-            'left_ankle_pitch_joint' : -0.4,  # 调整踝关节
-            'left_ankle_roll_joint' : 0.1,    # 增加踝关节外展 
-            'right_hip_yaw_joint' : -0.3,    # 右侧对称
-            'right_hip_roll_joint' : -0.25, 
-            'right_hip_pitch_joint' : -0.5,                                     
-            'right_knee_joint' : 0.65,                                           
-            'right_ankle_pitch_joint': -0.4,                            
-            'right_ankle_roll_joint' : -0.1,       
-            'torso_joint' : 0.
+            'left_hip_yaw_joint' : 0.078,    # From image
+            'left_hip_roll_joint' : 0.3,     # From image
+            'left_hip_pitch_joint' : -0.56,  # From image
+            'left_knee_joint' : 0.58,        # From image
+            'left_ankle_pitch_joint' : 0.0,  # User specified
+            'left_ankle_roll_joint' : -0.092, # Symmetrical to image's right_ankle_roll_joint
+            'right_hip_yaw_joint' : -0.15,   # From image
+            'right_hip_roll_joint' : -0.28,  # From image
+            'right_hip_pitch_joint' : 0.21,  # From image                                     
+            'right_knee_joint' : 0.12,       # From image                                           
+            'right_ankle_pitch_joint': -0.23, # From image                            
+            'right_ankle_roll_joint' : 0.26, # From image       
+            'torso_joint' : -0.25            # From image (waist_yaw_joint)
         }
     
     class env(LeggedRobotCfg.env):
