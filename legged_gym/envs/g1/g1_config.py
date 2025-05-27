@@ -8,8 +8,8 @@ class G1RoughCfg( LeggedRobotCfg ):
             'left_hip_roll_joint' : 0.3,     # From image
             'left_hip_pitch_joint' : -0.56,  # From image
             'left_knee_joint' : 0.58,        # From image
-            'left_ankle_pitch_joint' : 0.0,  # User specified
-            'left_ankle_roll_joint' : -0.092, # Symmetrical to image's right_ankle_roll_joint
+            'left_ankle_pitch_joint' : 0.0,  # From image
+            'left_ankle_roll_joint' : -0.092, # From image
             'right_hip_yaw_joint' : -0.15,   # From image
             'right_hip_roll_joint' : -0.28,  # From image
             'right_hip_pitch_joint' : 0.21,  # From image                                     
