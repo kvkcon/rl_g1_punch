@@ -210,19 +210,19 @@ class G1Robot(LeggedRobot):
     #     placement_reward = torch.exp(-(x_diff - target_x_diff)**2 / 0.02)
     #     return placement_reward
 
-    # def _reward_knee_bend(self):
-    #     """改进的膝关节弯曲奖励"""
-    #     # 确保膝关节索引正确
-    #     knee_joints = [3, 9]  # 根据URDF调整
-    #     knee_angles = self.dof_pos[:, knee_joints]
+    def _reward_knee_bend(self):
+        """改进的膝关节弯曲奖励"""
+        # 确保膝关节索引正确
+        knee_joints = [3, 9]  # 根据URDF调整
+        knee_angles = self.dof_pos[:, knee_joints]
         
-    #     # 拳击手姿态的理想膝关节角度
-    #     target_knee_angles = torch.tensor([0.65, 0.65], device=self.device)
+        # 拳击手姿态的理想膝关节角度
+        target_knee_angles = torch.tensor([0.65, 0.65], device=self.device)
         
-    #     knee_errors = torch.abs(knee_angles - target_knee_angles)
-    #     knee_rewards = torch.exp(-knee_errors * 3.0)
+        knee_errors = torch.abs(knee_angles - target_knee_angles)
+        knee_rewards = torch.exp(-knee_errors * 3.0)
         
-    #     return torch.mean(knee_rewards, dim=1)
+        return torch.mean(knee_rewards, dim=1)
 
     # def _reward_hip_stability(self):
     #     """髋关节稳定性 - 保持拳击手宽髋姿态"""
