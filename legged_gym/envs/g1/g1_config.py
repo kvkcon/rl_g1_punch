@@ -82,33 +82,36 @@ class G1RoughCfg( LeggedRobotCfg ):
         base_height_target = 0.78  # 降低目标高度，从0.78降到0.6；再降低到0.5
         
         class scales( LeggedRobotCfg.rewards.scales ):
-            tracking_lin_vel = 0.8     # 降低速度跟踪权重
-            tracking_ang_vel = 0.3
+            tracking_lin_vel = 1.2     # 增加速度跟踪权重，防止过度关注姿态
+            tracking_ang_vel = 0.5
             lin_vel_z = -3.0
-            ang_vel_xy = -0.1
-            orientation = -2.0         # 增加姿态稳定性权重
-            base_height = -20.0        # 增加高度控制权重
+            ang_vel_xy = -0.15
+            orientation = -3.0         # 增加姿态稳定性权重
+            base_height = -15.0        # 适当降低高度控制权重
             dof_acc = -2.5e-7
             dof_vel = -2e-3
-            feet_air_time = 0.0
-            collision = 0.0
-            action_rate = -0.005       # 减少动作变化惩罚
-            dof_pos_limits = -3.0
-            alive = 0.2
-            hip_pos = -0.5             # 增加髋关节位置控制；减少髋关节位置惩罚
-            contact_no_vel = -0.1
-            feet_swing_height = -8.0
-            contact = 0.3
+            feet_air_time = 0.5        # 增加腾空时间奖励，促进正常步态
+            collision = -1.0
+            action_rate = -0.01        # 增加动作变化惩罚，促进平滑运动
+            dof_pos_limits = -5.0
+            alive = 0.3
+            hip_pos = -0.3             # 降低髋关节位置惩罚
+            contact_no_vel = -0.2
+            feet_swing_height = -5.0
+            contact = 0.5
             
-            # 拳击手步态特征
-            stance_width = 5.0         # 增加步宽奖励权重；大幅增加步宽奖励
-            low_posture = 3.0          # 增加低姿态奖励权重
-            knee_bend = 2.0            # 增加膝关节弯曲奖励
-            boxer_stability = 4.0      # 新增：拳击手稳定性；增加综合稳定性奖励
-            forward_lean = 0.8         # 新增：前倾姿态
-            foot_placement = 2.0       # 新增：脚步位置控制
-            hip_abduction = 3.0        # 新增：专门奖励髋关节外展
-            # wide_stance_bonus = 2.0    # 新增：额外的宽站姿奖励
+            # 调整拳击手步态特征权重
+            stance_width = 2.0         # 降低步宽奖励权重，防止极端姿态
+            low_posture = 1.5          # 降低低姿态奖励权重
+            knee_bend = 1.0            # 降低膝关节弯曲奖励
+            boxer_stability = 2.0      # 降低综合稳定性奖励
+            forward_lean = 0.5         # 降低前倾姿态权重
+            foot_placement = 1.0       # 降低脚步位置控制权重
+            hip_abduction = 1.5        # 降低髋关节外展奖励
+            
+            # 新增奖励项
+            gait_naturalness = 2.0     # 新增：步态自然性
+            movement_efficiency = 1.0   # 新增：运动效率
 
 class G1RoughCfgPPO( LeggedRobotCfgPPO ):
     class policy:
