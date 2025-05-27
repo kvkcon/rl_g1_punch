@@ -147,12 +147,12 @@ class G1Robot(LeggedRobot):
         
         return width_reward * torch.exp(-extreme_penalty)
     
-    def _reward_low_posture(self):
-        """奖励保持低重心姿态"""
-        current_height = self.root_states[:, 2]
-        target_low_height = 0.7
-        height_reward = torch.exp(-(current_height - target_low_height)**2 / 0.01)
-        return height_reward
+    # def _reward_low_posture(self):
+    #     """奖励保持低重心姿态"""
+    #     current_height = self.root_states[:, 2]
+    #     target_low_height = 0.7
+    #     height_reward = torch.exp(-(current_height - target_low_height)**2 / 0.01)
+    #     return height_reward
 
     def _reward_stable_base(self):
         """奖励躯干稳定性"""
@@ -161,79 +161,79 @@ class G1Robot(LeggedRobot):
         stability_penalty = torch.sum(torch.square(roll_pitch), dim=1)
         return torch.exp(-stability_penalty * 10)
     
-    def _reward_boxer_stability(self):
-        """奖励拳击手式的稳定性 - 低重心+宽站姿组合"""
-        """改进的拳击手稳定性 - 更强调宽站姿"""
-        # 重心高度因子
-        current_height = self.root_states[:, 2]
-        height_factor = torch.exp(-(current_height - 0.5)**2 / 0.02)
+    # def _reward_boxer_stability(self):
+    #     """奖励拳击手式的稳定性 - 低重心+宽站姿组合"""
+    #     """改进的拳击手稳定性 - 更强调宽站姿"""
+    #     # 重心高度因子
+    #     current_height = self.root_states[:, 2]
+    #     height_factor = torch.exp(-(current_height - 0.5)**2 / 0.02)
         
-        # 步宽因子 - 增加目标宽度
-        left_foot_pos = self.feet_pos[:, 0, :2]
-        right_foot_pos = self.feet_pos[:, 1, :2]
-        foot_distance = torch.norm(left_foot_pos - right_foot_pos, dim=1)
-        width_factor = torch.exp(-(foot_distance - 0.2)**2 / 0.01)  # 目标宽度增加到0.4
+    #     # 步宽因子 - 增加目标宽度
+    #     left_foot_pos = self.feet_pos[:, 0, :2]
+    #     right_foot_pos = self.feet_pos[:, 1, :2]
+    #     foot_distance = torch.norm(left_foot_pos - right_foot_pos, dim=1)
+    #     width_factor = torch.exp(-(foot_distance - 0.2)**2 / 0.01)  # 目标宽度增加到0.4
         
-        # 髋关节外展因子
-        hip_rolls = self.dof_pos[:, [1, 7]]
-        target_rolls = torch.tensor([0.15, -0.15], device=self.device)
-        hip_errors = torch.abs(hip_rolls - target_rolls)
-        hip_factor = torch.mean(torch.exp(-hip_errors * 2.0), dim=1)
+    #     # 髋关节外展因子
+    #     hip_rolls = self.dof_pos[:, [1, 7]]
+    #     target_rolls = torch.tensor([0.15, -0.15], device=self.device)
+    #     hip_errors = torch.abs(hip_rolls - target_rolls)
+    #     hip_factor = torch.mean(torch.exp(-hip_errors * 2.0), dim=1)
         
-        # 三重组合奖励
-        return height_factor * width_factor #* hip_factor
+    #     # 三重组合奖励
+    #     return height_factor * width_factor #* hip_factor
 
-    def _reward_forward_lean(self):
-        """奖励轻微前倾姿态（拳击手特征）"""
-        # 从四元数计算pitch角
-        quat = self.root_states[:, 3:7]  # 四元数 [x, y, z, w]
+    # def _reward_forward_lean(self):
+    #     """奖励轻微前倾姿态（拳击手特征）"""
+    #     # 从四元数计算pitch角
+    #     quat = self.root_states[:, 3:7]  # 四元数 [x, y, z, w]
         
-        # 计算pitch角（绕y轴旋转）
-        # pitch = arcsin(2 * (w*y - z*x))
-        w, x, y, z = quat[:, 3], quat[:, 0], quat[:, 1], quat[:, 2]
-        pitch_angle = torch.asin(2 * (w*y - z*x))
+    #     # 计算pitch角（绕y轴旋转）
+    #     # pitch = arcsin(2 * (w*y - z*x))
+    #     w, x, y, z = quat[:, 3], quat[:, 0], quat[:, 1], quat[:, 2]
+    #     pitch_angle = torch.asin(2 * (w*y - z*x))
         
-        target_lean = 0.1  # 轻微前倾约5.7度
-        lean_reward = torch.exp(-(pitch_angle - target_lean)**2 / 0.05)
-        return lean_reward
+    #     target_lean = 0.1  # 轻微前倾约5.7度
+    #     lean_reward = torch.exp(-(pitch_angle - target_lean)**2 / 0.05)
+    #     return lean_reward
 
-    def _reward_foot_placement(self):
-        """奖励合理的脚步位置（拳击手步态）"""
-        # 左右脚的前后位置差异（拳击手通常一脚略微在前）
-        left_foot_x = self.feet_pos[:, 0, 0]
-        right_foot_x = self.feet_pos[:, 1, 0]
+    # def _reward_foot_placement(self):
+    #     """奖励合理的脚步位置（拳击手步态）"""
+    #     # 左右脚的前后位置差异（拳击手通常一脚略微在前）
+    #     left_foot_x = self.feet_pos[:, 0, 0]
+    #     right_foot_x = self.feet_pos[:, 1, 0]
         
-        # 期望左脚稍微在前（或根据需要调整）
-        x_diff = left_foot_x - right_foot_x
-        target_x_diff = 0.1  # 左脚在前10cm
+    #     # 期望左脚稍微在前（或根据需要调整）
+    #     x_diff = left_foot_x - right_foot_x
+    #     target_x_diff = 0.1  # 左脚在前10cm
         
-        placement_reward = torch.exp(-(x_diff - target_x_diff)**2 / 0.02)
-        return placement_reward
+    #     placement_reward = torch.exp(-(x_diff - target_x_diff)**2 / 0.02)
+    #     return placement_reward
 
-    def _reward_knee_bend(self):
-        """改进的膝关节弯曲奖励"""
-        # 确保膝关节索引正确
-        knee_joints = [3, 9]  # 根据URDF调整
-        knee_angles = self.dof_pos[:, knee_joints]
+    # def _reward_knee_bend(self):
+    #     """改进的膝关节弯曲奖励"""
+    #     # 确保膝关节索引正确
+    #     knee_joints = [3, 9]  # 根据URDF调整
+    #     knee_angles = self.dof_pos[:, knee_joints]
         
-        # 拳击手姿态的理想膝关节角度
-        target_knee_angles = torch.tensor([0.65, 0.65], device=self.device)
+    #     # 拳击手姿态的理想膝关节角度
+    #     target_knee_angles = torch.tensor([0.65, 0.65], device=self.device)
         
-        knee_errors = torch.abs(knee_angles - target_knee_angles)
-        knee_rewards = torch.exp(-knee_errors * 3.0)
+    #     knee_errors = torch.abs(knee_angles - target_knee_angles)
+    #     knee_rewards = torch.exp(-knee_errors * 3.0)
         
-        return torch.mean(knee_rewards, dim=1)
+    #     return torch.mean(knee_rewards, dim=1)
 
-    def _reward_hip_stability(self):
-        """髋关节稳定性 - 保持拳击手宽髋姿态"""
-        hip_roll_joints = [1, 7]  # 髋关节roll索引
-        hip_rolls = self.dof_pos[:, hip_roll_joints]
+    # def _reward_hip_stability(self):
+    #     """髋关节稳定性 - 保持拳击手宽髋姿态"""
+    #     hip_roll_joints = [1, 7]  # 髋关节roll索引
+    #     hip_rolls = self.dof_pos[:, hip_roll_joints]
         
-        # 期望的髋关节外展角度
-        target_rolls = torch.tensor([0.15, -0.15], device=self.device)
+    #     # 期望的髋关节外展角度
+    #     target_rolls = torch.tensor([0.15, -0.15], device=self.device)
         
-        roll_errors = torch.abs(hip_rolls - target_rolls)
-        return torch.sum(torch.exp(-roll_errors * 5.0), dim=1)
+    #     roll_errors = torch.abs(hip_rolls - target_rolls)
+    #     return torch.sum(torch.exp(-roll_errors * 5.0), dim=1)
     
     def _reward_hip_abduction(self):
         """专门奖励髋关节外展（拳击手宽站姿核心）"""
