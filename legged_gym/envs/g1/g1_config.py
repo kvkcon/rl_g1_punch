@@ -69,7 +69,7 @@ class G1RoughCfg( LeggedRobotCfg ):
         decimation = 4
 
     class asset( LeggedRobotCfg.asset ):
-        file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/g1_description/g1_12dof.urdf'
+        file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/g1_description/g1_12dof_punch.urdf'
         name = "g1"
         foot_name = "ankle_roll"
         penalize_contacts_on = ["hip", "knee"]
