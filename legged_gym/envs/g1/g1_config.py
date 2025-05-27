@@ -4,7 +4,7 @@ class G1RoughCfg( LeggedRobotCfg ):
     class init_state( LeggedRobotCfg.init_state ):
         pos = [0.0, 0.0, 0.65] # x,y,z [m] # 降低初始高度，从0.8降到0.65；再改到0.55
         default_joint_angles = {
-            'left_hip_yaw_joint' : 0.3,      # 增加外展角度；增加到0.3（约17度）
+            'left_hip_yaw_joint' : 0.2,      # 增加外展角度；增加到0.3（约17度）
             'left_hip_roll_joint' : 0.25,    # 增加髋关节外展；大幅增加外展到0.25（约14度）           
             'left_hip_pitch_joint' : -0.5,   # 增加髋关节弯曲     
             'left_knee_joint' : 0.65,         # 更大的膝关节弯曲
@@ -79,7 +79,7 @@ class G1RoughCfg( LeggedRobotCfg ):
   
     class rewards( LeggedRobotCfg.rewards ):
         soft_dof_pos_limit = 0.9
-        base_height_target = 0.6  # 降低目标高度，从0.78降到0.6；再降低到0.5
+        base_height_target = 0.78  # 降低目标高度，从0.78降到0.6；再降低到0.5
         
         class scales( LeggedRobotCfg.rewards.scales ):
             tracking_lin_vel = 0.8     # 降低速度跟踪权重
@@ -108,7 +108,7 @@ class G1RoughCfg( LeggedRobotCfg ):
             forward_lean = 0.8         # 新增：前倾姿态
             foot_placement = 2.0       # 新增：脚步位置控制
             hip_abduction = 3.0        # 新增：专门奖励髋关节外展
-            wide_stance_bonus = 2.0    # 新增：额外的宽站姿奖励
+            # wide_stance_bonus = 2.0    # 新增：额外的宽站姿奖励
 
 class G1RoughCfgPPO( LeggedRobotCfgPPO ):
     class policy:
