@@ -161,27 +161,27 @@ class G1Robot(LeggedRobot):
         stability_penalty = torch.sum(torch.square(roll_pitch), dim=1)
         return torch.exp(-stability_penalty * 10)
     
-    # def _reward_boxer_stability(self):
-    #     """奖励拳击手式的稳定性 - 低重心+宽站姿组合"""
-    #     """改进的拳击手稳定性 - 更强调宽站姿"""
-    #     # 重心高度因子
-    #     current_height = self.root_states[:, 2]
-    #     height_factor = torch.exp(-(current_height - 0.5)**2 / 0.02)
+    def _reward_boxer_stability(self):
+        """奖励拳击手式的稳定性 - 低重心+宽站姿组合"""
+        """改进的拳击手稳定性 - 更强调宽站姿"""
+        # 重心高度因子
+        current_height = self.root_states[:, 2]
+        height_factor = torch.exp(-(current_height - 0.73)**2 / 0.02)
         
-    #     # 步宽因子 - 增加目标宽度
-    #     left_foot_pos = self.feet_pos[:, 0, :2]
-    #     right_foot_pos = self.feet_pos[:, 1, :2]
-    #     foot_distance = torch.norm(left_foot_pos - right_foot_pos, dim=1)
-    #     width_factor = torch.exp(-(foot_distance - 0.2)**2 / 0.01)  # 目标宽度增加到0.4
+        # 步宽因子 - 增加目标宽度
+        left_foot_pos = self.feet_pos[:, 0, :2]
+        right_foot_pos = self.feet_pos[:, 1, :2]
+        foot_distance = torch.norm(left_foot_pos - right_foot_pos, dim=1)
+        width_factor = torch.exp(-(foot_distance - 0.25)**2 / 0.01)  # 目标宽度增加到0.4
         
-    #     # 髋关节外展因子
-    #     hip_rolls = self.dof_pos[:, [1, 7]]
-    #     target_rolls = torch.tensor([0.15, -0.15], device=self.device)
-    #     hip_errors = torch.abs(hip_rolls - target_rolls)
-    #     hip_factor = torch.mean(torch.exp(-hip_errors * 2.0), dim=1)
+        # 髋关节外展因子
+        hip_rolls = self.dof_pos[:, [1, 7]]
+        target_rolls = torch.tensor([0.15, -0.15], device=self.device)
+        hip_errors = torch.abs(hip_rolls - target_rolls)
+        hip_factor = torch.mean(torch.exp(-hip_errors * 2.0), dim=1)
         
-    #     # 三重组合奖励
-    #     return height_factor * width_factor #* hip_factor
+        # 三重组合奖励
+        return height_factor * width_factor #* hip_factor
 
     # def _reward_forward_lean(self):
     #     """奖励轻微前倾姿态（拳击手特征）"""

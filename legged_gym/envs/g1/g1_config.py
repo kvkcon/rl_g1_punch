@@ -107,7 +107,7 @@ class G1RoughCfg( LeggedRobotCfg ):
             
             # 暂时注释掉这些容易冲突的奖励
             # low_posture = 1.5
-            # boxer_stability = 2.0  
+            boxer_stability = 0.7  
             # forward_lean = 0.5
             foot_placement = 1.0
             knee_bend = 1.0
