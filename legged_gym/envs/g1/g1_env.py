@@ -128,23 +128,24 @@ class G1Robot(LeggedRobot):
     
     def _reward_stance_width(self):
         """改进的步宽奖励 - 更激进地鼓励宽站姿"""
+        """改进的步宽奖励 - 增加上限约束"""
         left_foot_pos = self.feet_pos[:, 0, :2]
         right_foot_pos = self.feet_pos[:, 1, :2]
         foot_distance = torch.norm(left_foot_pos - right_foot_pos, dim=1)
         
-        # 增加目标宽度
-        target_width = 0.2  # 从0.3增加到0.4
-        width_error = torch.abs(foot_distance - target_width)
+        # 目标宽度和容许范围
+        target_width = 0.25
+        tolerance = 0.1
         
-        # 使用更宽松的奖励函数
-        base_reward = torch.exp(-width_error * 5.0)
+        # 使用高斯分布奖励函数，有明确的峰值
+        width_reward = torch.exp(-((foot_distance - target_width) / tolerance) ** 2)
         
-        # 额外奖励超宽站姿
-        extra_wide_bonus = torch.where(foot_distance > 0.35,
-                                    (foot_distance - 0.35) * 3.0,
+        # 对极端宽度进行强惩罚
+        extreme_penalty = torch.where(foot_distance > 0.4, 
+                                    (foot_distance - 0.4) * 10.0, 
                                     torch.zeros_like(foot_distance))
         
-        return base_reward # + extra_wide_bonus
+        return width_reward * torch.exp(-extreme_penalty)
     
     def _reward_low_posture(self):
         """奖励保持低重心姿态"""
@@ -236,28 +237,27 @@ class G1Robot(LeggedRobot):
     
     def _reward_hip_abduction(self):
         """专门奖励髋关节外展（拳击手宽站姿核心）"""
-        hip_roll_left = 1   # left_hip_roll_joint
-        hip_roll_right = 7  # right_hip_roll_joint
+        """改进的髋关节外展奖励 - 增加上限约束"""
+        hip_roll_left = 1   
+        hip_roll_right = 7  
         
         hip_rolls = self.dof_pos[:, [hip_roll_left, hip_roll_right]]
         
-        # 更大的目标外展角度
-        target_rolls = torch.tensor([0.15, -0.15], device=self.device)
+        # 目标外展角度（适中）
+        target_rolls = torch.tensor([0.2, -0.2], device=self.device)
         
-        # 使用更宽松的奖励函数，鼓励更大的外展
+        # 基础奖励
         roll_errors = torch.abs(hip_rolls - target_rolls)
-        abduction_rewards = torch.exp(-roll_errors * 2.0)  # 降低惩罚系数
+        base_rewards = torch.exp(-roll_errors * 3.0)
         
-        # 额外奖励超过最小外展角度的情况
-        min_abduction = 0.15
-        bonus_left = torch.where(hip_rolls[:, 0] > min_abduction, 
-                            (hip_rolls[:, 0] - min_abduction) * 2.0, 
-                            torch.zeros_like(hip_rolls[:, 0]))
-        bonus_right = torch.where(hip_rolls[:, 1] < -min_abduction, 
-                                (-hip_rolls[:, 1] - min_abduction) * 2.0, 
-                                torch.zeros_like(hip_rolls[:, 1]))
+        # 对极端外展进行惩罚
+        max_safe_abduction = 0.35
+        extreme_penalty = torch.sum(
+            torch.clamp(torch.abs(hip_rolls) - max_safe_abduction, min=0) ** 2, 
+            dim=1
+        )
         
-        return torch.sum(abduction_rewards, dim=1) + bonus_left + bonus_right
+        return torch.sum(base_rewards, dim=1) * torch.exp(-extreme_penalty * 10.0)
     
     # def _reward_wide_stance_bonus(self):
     #     """额外的宽站姿奖励"""
@@ -276,3 +276,41 @@ class G1Robot(LeggedRobot):
     #                         torch.zeros_like(foot_distance))
         
     #     return bonus
+
+    def _reward_gait_naturalness(self):
+        """奖励自然的步态模式，防止极端姿态"""
+        # 限制步宽在合理范围内
+        left_foot_pos = self.feet_pos[:, 0, :2]
+        right_foot_pos = self.feet_pos[:, 1, :2]
+        foot_distance = torch.norm(left_foot_pos - right_foot_pos, dim=1)
+        
+        # 合理的步宽范围：0.15-0.35m
+        ideal_range_min = 0.15
+        ideal_range_max = 0.35
+        
+        # 在合理范围内给予奖励，超出范围给予惩罚
+        in_range_reward = torch.where(
+            (foot_distance >= ideal_range_min) & (foot_distance <= ideal_range_max),
+            torch.ones_like(foot_distance),
+            torch.exp(-(torch.clamp(foot_distance - ideal_range_max, min=0) + 
+                    torch.clamp(ideal_range_min - foot_distance, min=0)) * 3.0)
+        )
+        
+        # 限制髋关节外展角度在合理范围内
+        hip_rolls = self.dof_pos[:, [1, 7]]
+        max_abduction = 0.4  # 最大外展角度限制
+        hip_penalty = torch.sum(torch.clamp(torch.abs(hip_rolls) - max_abduction, min=0) ** 2, dim=1)
+        
+        return in_range_reward * torch.exp(-hip_penalty * 5.0)
+
+    def _reward_movement_efficiency(self):
+        """奖励运动效率，防止过度晃动"""
+        # 基于躯干稳定性和能耗的综合评估
+        base_stability = torch.exp(-torch.sum(self.base_ang_vel[:, :2] ** 2, dim=1) * 2.0)
+        
+        # 关节速度的平滑性
+        joint_vel_penalty = torch.sum(torch.abs(self.dof_vel), dim=1)
+        efficiency = torch.exp(-joint_vel_penalty * 0.01)
+        
+        return base_stability * efficiency
+    
