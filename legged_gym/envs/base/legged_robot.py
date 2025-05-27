@@ -178,6 +178,17 @@ class LeggedRobot(BaseTask):
             rew = self._reward_termination() * self.reward_scales["termination"]
             self.rew_buf += rew
             self.episode_sums["termination"] += rew
+
+        # 添加调试信息（每1000步打印一次）
+        if self.common_step_counter % 1000 == 0:
+            avg_foot_distance = torch.mean(torch.norm(
+                self.feet_pos[:, 0, :2] - self.feet_pos[:, 1, :2], dim=1
+            ))
+            avg_hip_abduction = torch.mean(torch.abs(self.dof_pos[:, [1, 7]]))
+            print(f"Step {self.common_step_counter}: "
+                f"Avg foot distance: {avg_foot_distance:.3f}, "
+                f"Avg hip abduction: {avg_hip_abduction:.3f}")
+            
     
     def compute_observations(self):
         """ Computes observations
