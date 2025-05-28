@@ -50,14 +50,14 @@ class G1RoughCfg( LeggedRobotCfg ):
         control_type = 'P'
           # PD Drive parameters:
         stiffness = {
-            'hip_yaw': 150,    # 增加髋关节刚度
+            'hip_yaw': 200,    # 增加髋关节刚度  # 增加髋偏航刚度（从150增加到200）
             'hip_roll': 120,   # 降低hip_roll刚度，允许更大外展
             'hip_pitch': 180,
             'knee': 200,       # 增加膝关节刚度
             'ankle': 60,
         } # [N*m/rad]
         damping = {
-            'hip_yaw': 3,      # 增加阻尼
+            'hip_yaw': 5,      # 增加阻尼 # 增加髋偏航阻尼（从3增加到5）
             'hip_roll': 2,
             'hip_pitch': 3,
             'knee': 6,
@@ -113,6 +113,9 @@ class G1RoughCfg( LeggedRobotCfg ):
             knee_bend = 1.0
             # hip_stability = 0.0
             # hip_pos = 0.0  # 也暂时禁用，因为它可能与hip_abduction冲突
+            # 新增：防止翘二郎腿的奖励
+            hip_yaw_penalty = 2.0      # 髋关节偏航惩罚
+            leg_separation = 1.5       # 双腿分离奖励
 
 class G1RoughCfgPPO( LeggedRobotCfgPPO ):
     class policy:

@@ -314,3 +314,39 @@ class G1Robot(LeggedRobot):
         
         return base_stability * efficiency
     
+    def _reward_hip_yaw_penalty(self):
+        """惩罚髋关节偏航过度，防止翘二郎腿"""
+        # 髋关节偏航索引
+        hip_yaw_left = 0   # left_hip_yaw_joint
+        hip_yaw_right = 6  # right_hip_yaw_joint
+        
+        hip_yaws = self.dof_pos[:, [hip_yaw_left, hip_yaw_right]]
+        
+        # 期望的髋关节偏航角度（接近中性位置）
+        target_yaws = torch.tensor([0.0, 0.0], device=self.device)
+        
+        # 计算偏差
+        yaw_errors = torch.abs(hip_yaws - target_yaws)
+        
+        # 对过度偏航进行强惩罚
+        penalty = torch.sum(yaw_errors ** 2, dim=1)
+        
+        # 特别惩罚右腿内收（翘二郎腿姿态）
+        right_hip_yaw = hip_yaws[:, 1]  # 右髋偏航
+        cross_leg_penalty = torch.clamp(-right_hip_yaw, min=0) ** 2  # 惩罚负值（内收）
+        
+        return torch.exp(-penalty * 5.0) * torch.exp(-cross_leg_penalty * 10.0)
+
+    def _reward_leg_separation(self):
+        """奖励双腿分开，防止交叉"""
+        # 获取髋关节偏航角度
+        left_hip_yaw = self.dof_pos[:, 0]
+        right_hip_yaw = self.dof_pos[:, 6]
+        
+        # 计算双腿是否有交叉趋势
+        leg_crossing = left_hip_yaw + right_hip_yaw  # 如果都向内，和会是负值
+        
+        # 惩罚交叉，奖励分开
+        separation_reward = torch.exp(-torch.clamp(-leg_crossing, min=0) * 8.0)
+        
+        return separation_reward
