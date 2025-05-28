@@ -102,7 +102,7 @@ class G1RoughCfg( LeggedRobotCfg ):
             # 简化的拳击手特征 - 只保留关键的4个
             stance_width = 1.0         # 使用新的有约束版本
             hip_abduction = 1.0        # 使用新的有约束版本  
-            gait_naturalness = 2.0     # 新增：防止极端姿态
+            gait_naturalness = 0.3     # 新增：防止极端姿态
             movement_efficiency = 1.0   # 新增：运动效率
             
             # 暂时注释掉这些容易冲突的奖励
