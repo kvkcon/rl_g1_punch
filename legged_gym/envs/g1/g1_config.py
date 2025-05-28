@@ -107,14 +107,14 @@ class G1RoughCfg( LeggedRobotCfg ):
             
             # 暂时注释掉这些容易冲突的奖励
             # low_posture = 1.5
-            boxer_stability = 0.7  
+            boxer_stability = 2.0  
             # forward_lean = 0.5
             foot_placement = 1.0
             knee_bend = 1.0
             # hip_stability = 0.0
             # hip_pos = 0.0  # 也暂时禁用，因为它可能与hip_abduction冲突
             # 新增：防止翘二郎腿的奖励
-            hip_yaw_penalty = 2.0      # 髋关节偏航惩罚
+            hip_yaw_penalty = 3.0      # 髋关节偏航惩罚
             leg_separation = 1.5       # 双腿分离奖励
 
 class G1RoughCfgPPO( LeggedRobotCfgPPO ):
