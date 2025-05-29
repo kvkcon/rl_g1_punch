@@ -403,15 +403,15 @@ class G1Robot(LeggedRobot):
 
     def _reward_dynamic_balance(self):
         """动态平衡奖励 - 适应拳击手移动"""
-        # 允许躯干在拳击手移动时有适度的动态调整
         base_lin_vel_xy = self.base_lin_vel[:, :2]
-        base_ang_vel_z = self.base_ang_vel[:, 2]
         
         # 根据移动速度调整平衡容忍度
         speed = torch.norm(base_lin_vel_xy, dim=1)
         speed_factor = torch.clamp(speed * 2.0, min=0.5, max=2.0)  # 速度越快，容忍度越高
+        speed_factor = torch.clamp(speed * 2.0, min=0.5, max=2.0)
         
-        # 躯干稳定性（考虑移动时的动态）
-        orientation_penalty = torch.sum(self.base_euler[:, :2]**2, dim=1) / speed_factor
+        # 使用projected_gravity评估躯干姿态:躯干稳定性（考虑移动时的动态）
+        gravity_deviation = torch.norm(self.projected_gravity[:, :2], dim=1)
+        orientation_penalty = gravity_deviation / speed_factor
         
         return torch.exp(-orientation_penalty * 3.0)
