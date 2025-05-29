@@ -355,3 +355,63 @@ class G1Robot(LeggedRobot):
         right_penalty = torch.clamp(right_error - max_safe_deviation, min=0) ** 2
         
         return torch.exp(-(left_penalty + right_penalty) * 10.0)
+    
+    def _reward_boxer_gait_dynamic(self):
+        """奖励拳击手式的动态步态 - 保持基础姿态同时允许适度摆动"""
+        hip_yaw_left = 0   
+        hip_yaw_right = 6  
+        
+        hip_yaws = self.dof_pos[:, [hip_yaw_left, hip_yaw_right]]
+        
+        # 拳击手移动时的动态范围
+        left_range = [0.0, 0.15]   # 左腿可以在0到0.15之间摆动
+        right_range = [-0.2, -0.1] # 右腿可以在-0.2到-0.1之间摆动
+        
+        # 检查是否在合理范围内
+        left_in_range = (hip_yaws[:, 0] >= left_range[0]) & (hip_yaws[:, 0] <= left_range[1])
+        right_in_range = (hip_yaws[:, 1] >= right_range[0]) & (hip_yaws[:, 1] <= right_range[1])
+        
+        # 奖励在范围内的动作
+        range_reward = (left_in_range.float() + right_in_range.float()) / 2.0
+        
+        # 额外奖励接近默认拳击手姿态
+        default_proximity = torch.exp(-torch.sum((hip_yaws - torch.tensor([0.078, -0.15], device=self.device))**2, dim=1) * 5.0)
+        
+        return range_reward * 0.7 + default_proximity * 0.3
+
+    def _reward_boxer_step_pattern(self):
+        """奖励拳击手式的步伐模式"""
+        # 获取脚的位置
+        left_foot_pos = self.feet_pos[:, 0, :]
+        right_foot_pos = self.feet_pos[:, 1, :]
+        
+        # 拳击手步态特征：左脚稍前，右脚稍后
+        foot_x_diff = left_foot_pos[:, 0] - right_foot_pos[:, 0]  # 左脚应该更靠前
+        target_x_diff = 0.1  # 左脚前10cm
+        
+        # 横向间距保持
+        foot_y_diff = torch.abs(left_foot_pos[:, 1] - right_foot_pos[:, 1])
+        target_y_diff = 0.25  # 横向25cm间距
+        
+        # 前后差奖励
+        x_reward = torch.exp(-torch.abs(foot_x_diff - target_x_diff)**2 / 0.02)
+        
+        # 横向距离奖励
+        y_reward = torch.exp(-torch.abs(foot_y_diff - target_y_diff)**2 / 0.01)
+        
+        return x_reward * y_reward
+
+    def _reward_dynamic_balance(self):
+        """动态平衡奖励 - 适应拳击手移动"""
+        # 允许躯干在拳击手移动时有适度的动态调整
+        base_lin_vel_xy = self.base_lin_vel[:, :2]
+        base_ang_vel_z = self.base_ang_vel[:, 2]
+        
+        # 根据移动速度调整平衡容忍度
+        speed = torch.norm(base_lin_vel_xy, dim=1)
+        speed_factor = torch.clamp(speed * 2.0, min=0.5, max=2.0)  # 速度越快，容忍度越高
+        
+        # 躯干稳定性（考虑移动时的动态）
+        orientation_penalty = torch.sum(self.base_euler[:, :2]**2, dim=1) / speed_factor
+        
+        return torch.exp(-orientation_penalty * 3.0)
