@@ -84,38 +84,26 @@ class G1RoughCfg( LeggedRobotCfg ):
         class scales( LeggedRobotCfg.rewards.scales ):
             tracking_lin_vel = 1.5     
             tracking_ang_vel = 0.5
-            lin_vel_z = -2.0
-            ang_vel_xy = -0.1
-            orientation = -1.0         
+            
+            # 修改髋关节相关奖励权重
+            hip_yaw_penalty = 5.0          # 适中权重，不要过高
+            leg_separation = 3.0           # 适中权重
+            
+            # 新增拳击手步态奖励
+            boxer_gait_dynamic = 2.0       # 新增
+            boxer_step_pattern = 1.5       # 新增  
+            dynamic_balance = 1.0          # 新增
+            
+            # 降低可能冲突的奖励
+            stance_width = 0.3             # 降低，让boxer_step_pattern主导
+            hip_abduction = 0.3            # 降低，让boxer_gait_dynamic主导
+            
+            # 保持其他重要奖励
             base_height = -10.0        
-            dof_acc = -2.5e-7
-            dof_vel = -1e-3
-            feet_air_time = 1.0        # 重要：促进正常步态
-            collision = -1.0
-            action_rate = -0.01        
-            dof_pos_limits = -10.0
+            dof_pos_limits = -5.0          # 稍微降低，给动态调整更多空间
             alive = 2.5
-            contact_no_vel = -0.1
-            feet_swing_height = -5.0
-            contact = 1.0              # 重要：接触奖励
-            
-            # 简化的拳击手特征 - 只保留关键的4个
-            stance_width = 1.0         # 使用新的有约束版本
-            hip_abduction = 1.0        # 使用新的有约束版本  
-            gait_naturalness = 0.3     # 新增：防止极端姿态
-            movement_efficiency = 1.0   # 新增：运动效率
-            
-            # 暂时注释掉这些容易冲突的奖励
-            # low_posture = 1.5
-            boxer_stability = 2.0  
-            # forward_lean = 0.5
-            foot_placement = 1.0
-            knee_bend = 1.0
-            # hip_stability = 0.0
-            # hip_pos = 0.0  # 也暂时禁用，因为它可能与hip_abduction冲突
-            # 新增：防止翘二郎腿的奖励
-            hip_yaw_penalty = 3.0      # 髋关节偏航惩罚
-            leg_separation = 1.5       # 双腿分离奖励
+            contact = 1.0
+            feet_air_time = 1.0
 
 class G1RoughCfgPPO( LeggedRobotCfgPPO ):
     class policy:
