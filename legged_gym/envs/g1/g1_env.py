@@ -315,38 +315,43 @@ class G1Robot(LeggedRobot):
         return base_stability * efficiency
     
     def _reward_hip_yaw_penalty(self):
-        """惩罚髋关节偏航过度，防止翘二郎腿"""
-        # 髋关节偏航索引
-        hip_yaw_left = 0   # left_hip_yaw_joint
-        hip_yaw_right = 6  # right_hip_yaw_joint
+        """奖励保持拳击手髋关节偏航姿态"""
+        hip_yaw_left = 0   
+        hip_yaw_right = 6  
         
         hip_yaws = self.dof_pos[:, [hip_yaw_left, hip_yaw_right]]
         
-        # 期望的髋关节偏航角度（接近中性位置）
-        target_yaws = torch.tensor([0.0, 0.0], device=self.device)
+        # 使用默认的拳击手姿态作为目标，而不是中性位置
+        target_yaws = torch.tensor([0.078, -0.15], device=self.device)  # 与default_joint_angles一致
         
         # 计算偏差
         yaw_errors = torch.abs(hip_yaws - target_yaws)
         
-        # 对过度偏航进行强惩罚
-        penalty = torch.sum(yaw_errors ** 2, dim=1)
+        # 奖励保持在目标姿态附近
+        base_reward = torch.exp(-torch.sum(yaw_errors ** 2, dim=1) * 8.0)
         
-        # 特别惩罚右腿内收（翘二郎腿姿态）
-        right_hip_yaw = hip_yaws[:, 1]  # 右髋偏航
-        cross_leg_penalty = torch.clamp(-right_hip_yaw, min=0) ** 2  # 惩罚负值（内收）
+        # 允许轻微的动态调整（拳击手移动时的微调）
+        max_deviation = 0.1  # 允许±0.1弧度的调整
+        deviation_penalty = torch.sum(torch.clamp(yaw_errors - max_deviation, min=0) ** 2, dim=1)
         
-        return torch.exp(-penalty * 5.0) * torch.exp(-cross_leg_penalty * 10.0)
+        return base_reward * torch.exp(-deviation_penalty * 15.0)
 
     def _reward_leg_separation(self):
-        """奖励双腿分开，防止交叉"""
-        # 获取髋关节偏航角度
+        """保持拳击手腿部分离，允许拳击手式的不对称姿态"""
         left_hip_yaw = self.dof_pos[:, 0]
         right_hip_yaw = self.dof_pos[:, 6]
         
-        # 计算双腿是否有交叉趋势
-        leg_crossing = left_hip_yaw + right_hip_yaw  # 如果都向内，和会是负值
+        # 拳击手姿态的期望值
+        target_left = 0.078
+        target_right = -0.15
         
-        # 惩罚交叉，奖励分开
-        separation_reward = torch.exp(-torch.clamp(-leg_crossing, min=0) * 8.0)
+        # 奖励保持在目标范围内
+        left_error = torch.abs(left_hip_yaw - target_left)
+        right_error = torch.abs(right_hip_yaw - target_right)
         
-        return separation_reward
+        # 防止过度内收或外展
+        max_safe_deviation = 0.12
+        left_penalty = torch.clamp(left_error - max_safe_deviation, min=0) ** 2
+        right_penalty = torch.clamp(right_error - max_safe_deviation, min=0) ** 2
+        
+        return torch.exp(-(left_penalty + right_penalty) * 10.0)
